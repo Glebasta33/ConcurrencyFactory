@@ -22,17 +22,32 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("MyTest", "onCreate 1")
+        Log.d("MyTest", "onCreate start")
         setContent { UI() }
 
         val job = scope.launch(start = CoroutineStart.LAZY) {
-            delay(3000)
-            Log.d("MyTest", "coroutine ${Thread.currentThread().name}")
+            Log.d("MyTest", "coroutine 1 start ${Thread.currentThread().name}")
+
+
+            val job1 = launch {
+                delay(1000)
+                Log.d("MyTest", "coroutine 1.1 ${Thread.currentThread().name}")
+            }
+
+            val job2 = launch {
+                delay(2000)
+                Log.d("MyTest", "coroutine 1.2 ${Thread.currentThread().name}")
+            }
+
+            job1.join()
+            job2.join()
+
+            Log.d("MyTest", "coroutine 1 end ${Thread.currentThread().name}")
         }
 
         job.start()
 
-        Log.d("MyTest", "onCreate 2")
+        Log.d("MyTest", "onCreate end")
     }
 }
 
