@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
 
@@ -27,7 +28,7 @@ class MainActivity : ComponentActivity() {
         setContent { UI() }
 
         scope.launch {
-            runTwoAsyncAndMapResult(scope)
+            parentCoroutineWaitsAllChildToEnd(scope)
         }
 
         Log.d("MyTest", "onCreate end")
@@ -110,5 +111,41 @@ private suspend fun runTwoAsyncAndMapResult(scope: CoroutineScope) {
      * 11:26:00.682  D  coroutine 1.2 main
      * 11:26:00.687  D  2 async result: {Ivan=33}
      * 11:26:00.687  D  coroutine 1 end main
+     */
+}
+
+/**
+ * Родительская корутина ждёт выполнения всех дочерних корутин.
+ */
+private suspend fun parentCoroutineWaitsAllChildToEnd(scope: CoroutineScope) {
+    Log.d("MyTest", "scope start")
+    val parentJob = scope.launch {
+        repeat(10) { index ->
+            launch {
+                val millis = Random.nextInt(1, index + 10) * 1000
+                delay(millis.toLong())
+                Log.d("MyTest", "child coroutine finishes. millis: $millis")
+            }
+        }
+    }
+
+    parentJob.join()
+    Log.d("MyTest", "scope finish")
+
+    /**
+     * 11:40:41.400  D  onCreate start
+     * 11:40:41.440  D  onCreate end
+     * 11:40:41.767  D  scope start
+     * 11:40:42.852  D  child coroutine finishes. millis: 1000
+     * 11:40:43.857  D  child coroutine finishes. millis: 2000
+     * 11:40:44.854  D  child coroutine finishes. millis: 3000
+     * 11:40:46.854  D  child coroutine finishes. millis: 5000
+     * 11:40:47.849  D  child coroutine finishes. millis: 6000
+     * 11:40:48.856  D  child coroutine finishes. millis: 7000
+     * 11:40:49.850  D  child coroutine finishes. millis: 8000
+     * 11:40:52.850  D  child coroutine finishes. millis: 11000
+     * 11:40:54.853  D  child coroutine finishes. millis: 13000
+     * 11:40:57.856  D  child coroutine finishes. millis: 16000
+     * 11:40:57.858  D  scope finish
      */
 }
