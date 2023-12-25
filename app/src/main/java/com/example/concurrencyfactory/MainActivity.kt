@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +30,7 @@ class MainActivity : ComponentActivity() {
         setContent { UI() }
 
         scope.launch {
-            parentCoroutineWaitsAllChildToEnd(scope)
+            launchCoroutinesConcurrently(scope)
         }
 
         Log.d("MyTest", "onCreate end")
@@ -39,10 +41,37 @@ class MainActivity : ComponentActivity() {
 private fun UI() {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().background(Color.Black)
     ) {
         CircularProgressIndicator()
     }
+}
+
+/**
+ * Корутина (код внутри launch) выполняется одновременно (параллельно == concurrently) с кодом функции,
+ * внутри которой была вызвана, не блокируя поток исполнения.
+ */
+private suspend fun launchCoroutinesConcurrently(scope: CoroutineScope) {
+    scope.launch {
+        repeat(3) {
+            Log.d("MyTest", "Hello from coroutines! ${it + 1}")
+            delay(1000)
+        }
+    }
+
+    repeat(3) {
+        Log.d("MyTest", "Hello from rest of code! ${it + 1}")
+        delay(1000)
+    }
+
+    /**
+     * 16:09:15.542  D  Hello from rest of code! 1
+     * 16:09:15.611  D  Hello from coroutines! 1
+     * 16:09:16.546  D  Hello from rest of code! 2
+     * 16:09:16.617  D  Hello from coroutines! 2
+     * 16:09:17.546  D  Hello from rest of code! 3
+     * 16:09:17.624  D  Hello from coroutines! 3
+     */
 }
 
 /**
