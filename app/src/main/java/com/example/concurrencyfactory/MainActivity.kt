@@ -30,7 +30,13 @@ class MainActivity : ComponentActivity() {
         setContent { UI() }
 
         scope.launch {
-            launchCoroutinesConcurrently(scope)
+            StructuredConcurrencyWorld(scope).run {
+
+                delay(10000)
+                cancelRootScope()
+            }
+
+
         }
 
         Log.d("MyTest", "onCreate end")
