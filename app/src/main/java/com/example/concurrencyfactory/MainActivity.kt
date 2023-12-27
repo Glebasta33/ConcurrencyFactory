@@ -37,9 +37,7 @@ class MainActivity : ComponentActivity() {
         setContent { UI() }
 
         scope.launch {
-            StateFlowViewModel().stateFlow.collect {
-                Log.d("MyTest", "Last state: $it")
-            }
+            ExceptionHandlingPlayground().getDataWithTryCatchAndSuspend()
         }
     }
 }
