@@ -37,7 +37,9 @@ class MainActivity : ComponentActivity() {
         setContent { UI() }
 
         scope.launch {
-            consumeSharedFlowBeforeProductionStarted()
+            StateFlowViewModel().stateFlow.collect {
+                Log.d("MyTest", "Last state: $it")
+            }
         }
     }
 }
