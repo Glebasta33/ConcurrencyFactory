@@ -1,5 +1,6 @@
 package com.example.concurrencyfactory
 
+import android.util.Log
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -14,6 +15,7 @@ class ColdFlowDataSource {
         repeat(amount) { number ->
             delay(1000)
             emit(number)
+            Log.d("MyTest", "In Provider: $number emitted ")
         }
         error("Error")
     }

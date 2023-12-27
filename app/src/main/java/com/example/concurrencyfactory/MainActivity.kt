@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -34,22 +35,32 @@ class MainActivity : ComponentActivity() {
         setContent { UI() }
 
         scope.launch {
-            Log.d("MyTest", "before flow collection")
 
-            /**
-             * Consumer - потребитель данных. В холодных потоках потребитель (вызов collect)
-             * запускает Producer и даёт ему команду начать эмитить данные в поток.
-             */
-            ColdFlowDataSource().getStrings(5)
-                .modifyFlow()
-                .collect {
-                    Log.d("MyTest", "> $it")
-                }
+            collectFlowAndCancel()
 
-
-            Log.d("MyTest", "after flow collection")
         }
     }
+}
+
+private suspend fun collectFlowAndCancel() = coroutineScope{
+    val job = launch {
+        /**
+         * Consumer - потребитель данных. В холодных потоках потребитель (вызов collect)
+         * запускает Producer и даёт ему команду начать эмитить данные в поток.
+         */
+        ColdFlowDataSource().getNumbers(5)
+            .modifyFlow()
+            .collect {
+                Log.d("MyTest", "> $it")
+            }
+    }
+
+    /**
+     * Отмена корутины, внутри которой происходит коллектинг,
+     * отменяет работу Flow (Producer перестаёт эмитить данные).
+     */
+    delay(3000)
+    job.cancel()
 }
 
 /**
