@@ -37,11 +37,44 @@ class MainActivity : ComponentActivity() {
         setContent { UI() }
 
         scope.launch {
-            collect1ColdFlowIn2Coroutines(scope)
+            consumeSharedFlowBeforeProductionStarted()
+        }
+    }
+}
+
+/**
+ * Вызов collect у горячего потока не запускает Flow. Это скорее подписка, после которой Consumer
+ * ожидает начала эмиттинга данных и триггерится только, когда были заэмичены данные.
+ */
+private suspend fun consumeSharedFlowBeforeProductionStarted() = coroutineScope {
+    val dataSource = SharedFlowDataSource()
+
+    launch {
+        dataSource.sharedFlow.collect {
+            Log.d("MyTest", "1st collecting: $it")
         }
     }
 
+    launch {
+        dataSource.sharedFlow.collect {
+            Log.d("MyTest", "2nd collecting: $it")
+        }
+    }
+    Log.d("MyTest", "Consumers ready to collect")
 
+    delay(3000)
+    dataSource.runSharedFlow(10)
+    Log.d("MyTest", "SharedFlow (Producer) started to emit")
+
+    /**
+     * 16:18:31.448  D  Consumers ready to collect
+     *  1, 2, 3...
+     * 16:18:34.451  D  SharedFlow (Producer) started to emit
+     * 16:18:34.453  D  1st collecting: 0
+     * 16:18:34.453  D  2nd collecting: 0
+     * 16:18:35.455  D  1st collecting: 1
+     * 16:18:35.455  D  2nd collecting: 1
+     */
 }
 
 /**
@@ -70,7 +103,7 @@ private fun CoroutineScope.collect1ColdFlowIn2Coroutines(scope: CoroutineScope) 
 }
 
 /**
- * 1 SharedFlow (Producer) потребляется 2-мя Concumer`ами одновременно в 2-х корутинах
+ * 1 SharedFlow (Producer) потребляется 2-мя Consumer`ами одновременно в 2-х корутинах
  */
 private fun CoroutineScope.collect1SharedFlowIn2Coroutines(scope: CoroutineScope) {
     val sharedFlow = ColdFlowDataSource().getNumbersFlow(5)
