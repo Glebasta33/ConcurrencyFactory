@@ -17,6 +17,11 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
@@ -26,28 +31,41 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("MyTest", "onCreate start")
         setContent { UI() }
 
         scope.launch {
-            StructuredConcurrencyWorld(scope).run {
+            Log.d("MyTest", "before flow collection")
 
-                delay(10000)
-                cancelRootScope()
-            }
+            ColdFlowDataSource().getStrings(5)
+                .modifyFlow()
+                .collect {
+                    Log.d("MyTest", "> $it")
+                }
 
 
+            Log.d("MyTest", "after flow collection")
         }
-
-        Log.d("MyTest", "onCreate end")
     }
+}
+
+/**
+ * Цепочка терминальных операторов, модифицирующих значения Flow.
+ */
+private fun <T> Flow<T>.modifyFlow(): Flow<T> {
+    map { "Number: $it" }
+    onStart { Log.d("MyTest", "onStart") }
+    catch { Log.d("MyTest", "caught exception: ${it.message}") }
+    onCompletion { Log.d("MyTest", "onCompletion") }
+        .also { return it }
 }
 
 @Composable
 private fun UI() {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize().background(Color.Black)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
     ) {
         CircularProgressIndicator()
     }
