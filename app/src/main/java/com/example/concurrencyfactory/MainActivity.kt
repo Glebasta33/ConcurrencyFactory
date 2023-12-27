@@ -19,10 +19,12 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
@@ -35,20 +37,49 @@ class MainActivity : ComponentActivity() {
         setContent { UI() }
 
         scope.launch {
-
-            collectFlowAndCancel()
+            collect1SharedFlowIn2Coroutines(scope)
 
         }
     }
+
+
 }
 
-private suspend fun collectFlowAndCancel() = coroutineScope{
+/**
+ * 1 SharedFlow (Producer) потребляется 2-мя Concumer`ами одновременно в 2-х корутинах
+ */
+private fun CoroutineScope.collect1SharedFlowIn2Coroutines(scope: CoroutineScope) {
+    val sharedFlow = ColdFlowDataSource().getNumbersFlow(5)
+        .shareIn(
+            scope, started = SharingStarted.Lazily, 1
+        )
+
+    launch {
+        sharedFlow.collect {
+            Log.d("MyTest", "1st collecting: $it")
+        }
+    }
+
+    launch {
+        sharedFlow.collect {
+            Log.d("MyTest", "2nd collecting: $it")
+        }
+    }
+    /**
+     * 15:47:56.326  D  In Provider: 0 emitted
+     * 15:47:56.327  D  1st collecting: 0
+     * 15:47:56.328  D  2nd collecting: 0
+     * ...
+     */
+}
+
+private suspend fun collectFlowAndCancel() = coroutineScope {
     val job = launch {
         /**
          * Consumer - потребитель данных. В холодных потоках потребитель (вызов collect)
          * запускает Producer и даёт ему команду начать эмитить данные в поток.
          */
-        ColdFlowDataSource().getNumbers(5)
+        ColdFlowDataSource().getNumbersFlow(5)
             .modifyFlow()
             .collect {
                 Log.d("MyTest", "> $it")

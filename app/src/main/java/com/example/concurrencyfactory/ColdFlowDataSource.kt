@@ -11,7 +11,7 @@ class ColdFlowDataSource {
     /**
      * Producer. Поставляет данные во Flow.
      */
-    fun getNumbers(amount: Int): Flow<Int> = flow {
+    fun getNumbersFlow(amount: Int): Flow<Int> = flow {
         repeat(amount) { number ->
             delay(1000)
             emit(number)
@@ -20,7 +20,7 @@ class ColdFlowDataSource {
         error("Error")
     }
 
-    fun getStrings(amount: Int): Flow<String> = flow {
+    fun getStringsFlow(amount: Int): Flow<String> = flow {
         repeat(amount) { index ->
             delay(1000)
             val string = Random.nextBits(index * 10).toString()
