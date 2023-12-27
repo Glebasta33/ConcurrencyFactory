@@ -37,12 +37,36 @@ class MainActivity : ComponentActivity() {
         setContent { UI() }
 
         scope.launch {
-            collect1SharedFlowIn2Coroutines(scope)
-
+            collect1ColdFlowIn2Coroutines(scope)
         }
     }
 
 
+}
+
+/**
+ * Вызов ColdFlow из 2-х корутин одновременно создаёт 2 отдельны Flows (Producers).
+ */
+private fun CoroutineScope.collect1ColdFlowIn2Coroutines(scope: CoroutineScope) {
+    val coldFlow = ColdFlowDataSource().getNumbersFlow(5)
+
+    launch {
+        coldFlow.collect {
+            Log.d("MyTest", "1st collecting: $it")
+        }
+    }
+
+    launch {
+        coldFlow.collect {
+            Log.d("MyTest", "2nd collecting: $it")
+        }
+    }
+    /**
+     * 15:51:22.791  D  1st collecting: 0
+     * 15:51:22.791  D  In Provider: 0 emitted
+     * 15:51:22.791  D  2nd collecting: 0
+     * 15:51:22.791  D  In Provider: 0 emitted
+     */
 }
 
 /**
