@@ -1,9 +1,11 @@
 package com.example.concurrencyfactory
 
 import android.util.Log
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ExceptionHandlingPlayground {
 
@@ -35,6 +37,20 @@ class ExceptionHandlingPlayground {
             }
         } catch (e: Exception) {
             Log.d("MyTest", "caught exception: ${e.message}")
+        }
+        return "Exception"
+    }
+
+    /**
+     * [CoroutineExceptionHandler] способен перехватить исключение, которое бросается из launch
+     */
+    suspend fun getDataExceptionHandlerAndLaunch(scope: CoroutineScope): String {
+        val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+            Log.d("MyTest", "exceptionHandler: ${throwable.message}")
+        }
+        scope.launch(exceptionHandler) {
+            delay(1000)
+            throw RuntimeException("coroutine failed")
         }
         return "Exception"
     }
