@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
         setContent { UI() }
 
         scope.launch {
-            ExceptionHandlingPlayground().getDataWithTryCatchAndSuspend()
+            ExceptionHandlingPlayground().getDataWithTryCatchAndLaunch(scope)
         }
     }
 }
