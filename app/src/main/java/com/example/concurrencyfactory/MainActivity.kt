@@ -36,6 +36,10 @@ class MainActivity : ComponentActivity() {
         scope.launch {
             Log.d("MyTest", "before flow collection")
 
+            /**
+             * Consumer - потребитель данных. В холодных потоках потребитель (вызов collect)
+             * запускает Producer и даёт ему команду начать эмитить данные в поток.
+             */
             ColdFlowDataSource().getStrings(5)
                 .modifyFlow()
                 .collect {

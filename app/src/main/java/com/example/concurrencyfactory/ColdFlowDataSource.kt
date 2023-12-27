@@ -7,6 +7,9 @@ import kotlin.random.Random
 
 class ColdFlowDataSource {
 
+    /**
+     * Producer. Поставляет данные во Flow.
+     */
     fun getNumbers(amount: Int): Flow<Int> = flow {
         repeat(amount) { number ->
             delay(1000)
