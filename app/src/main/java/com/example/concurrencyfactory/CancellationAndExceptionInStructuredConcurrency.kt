@@ -17,10 +17,11 @@ class CancellationAndExceptionInStructuredConcurrency {
      * Добавление CoroutineExceptionHandler в контекст родительского скоупа перехватывает исключения,
      * выброшенные дочерними корутинами.
      */
-    val rootScope = CoroutineScope(Dispatchers.Default + exceptionHandler)
+    val rootScope = CoroutineScope(Dispatchers.Default /*+ exceptionHandler*/)
 
     init {
-        val rootJob = rootScope.launch {
+        val rootJob = rootScope.launch(/*exceptionHandler*/) {
+            // exceptionHandler в самом родительском биледере будет перехватывать исключения
 
             val job1 = launch {
                 delay(3000)
@@ -37,8 +38,9 @@ class CancellationAndExceptionInStructuredConcurrency {
                 }
             }
 
-            val job2 = launch {
-                val job2Child1 = launch {
+            // exceptionHandlerт не перехватывает исключения в билдерах дочерних корутин
+            val job2 = launch(/*exceptionHandler*/) {
+                val job2Child1 = launch(/*exceptionHandler*/) {
                     delay(3000)
                     /**
                      * Выброшенное в любой корутине исключение отменяет работу всей иерархии корутин
