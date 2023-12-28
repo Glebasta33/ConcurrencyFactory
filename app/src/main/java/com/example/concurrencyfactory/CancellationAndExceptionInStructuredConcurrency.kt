@@ -12,7 +12,12 @@ class CancellationAndExceptionInStructuredConcurrency {
     val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         Log.d("MyTest", "CoroutineExceptionHandler: ${throwable.message}")
     }
-    val rootScope = CoroutineScope(Dispatchers.Default)
+
+    /**
+     * Добавление CoroutineExceptionHandler в контекст родительского скоупа перехватывает исключения,
+     * выброшенные дочерними корутинами.
+     */
+    val rootScope = CoroutineScope(Dispatchers.Default + exceptionHandler)
 
     init {
         val rootJob = rootScope.launch {
@@ -39,7 +44,7 @@ class CancellationAndExceptionInStructuredConcurrency {
                      * Выброшенное в любой корутине исключение отменяет работу всей иерархии корутин
                      * и приводит к крашу приложения, если исключение не обработать.
                      */
-                    throw RuntimeException()
+                    throw RuntimeException("My exception from coroutine")
                 }
 
                 val job2Child2 = launch {
