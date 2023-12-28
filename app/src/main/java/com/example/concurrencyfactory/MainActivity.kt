@@ -28,6 +28,10 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
+/**
+ * ## Sources:
+ * 1) [Android. Coroutines: Additional resources](https://developer.android.com/kotlin/coroutines/additional-resources)
+ */
 class MainActivity : ComponentActivity() {
 
     private val scope = CoroutineScope(Dispatchers.Main)
@@ -36,8 +40,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent { UI() }
 
+        CancellationAndExceptionInStructuredConcurrency()
+
         scope.launch {
-            ExceptionHandlingPlayground().getDataWithTryCatchAndLaunch(scope)
         }
     }
 }
