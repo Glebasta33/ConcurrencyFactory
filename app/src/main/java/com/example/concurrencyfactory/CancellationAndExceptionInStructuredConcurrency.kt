@@ -33,31 +33,40 @@ class CancellationAndExceptionInStructuredConcurrency {
 
                 val job1Child2 = launch {
                     while (true) {
+                        delay(1000)
                         Log.d("MyTest", "Hi from job1Child2. isActive: $isActive")
                         /**
                          *  CancellationException не отменяет работу родительских корутин. Его не перехватывет ExceptionHandler.
                          *  Видимо CancellationException не передаётся вверх по иерархии Job.
                          */
-                        if (!isActive) throw CancellationException("My CancellationException")
+//                        if (!isActive) throw CancellationException("My CancellationException")
+                        /**
+                         * Вызов cancel у родительской корутины не отменит дочернюю, если она не бросает  CancellationException ?!
+                         */
                     }
                 }
 
-                launch {
-                    while (true) {
-                        delay(1000)
-                        Log.d("MyTest", "job1Child1.isActive: ${job1Child1.isActive}. job1Child2.isActive: ${job1Child2.isActive}")
-                    }
-                }
+//                while (true) if (!isActive) throw CancellationException("My CancellationException")
 
-                delay(5000)
                 /**
                  * Вызов Cancel лишь переводит статус корутины isActive в false, но не останавливает её выполнение.
                  * Чтобы остановить корутину необходимо бросить CancellationException.
                  */
-                job1Child2.cancel()
+//                job1Child2.cancel()
             }
 
-            // exceptionHandlerт не перехватывает исключения в билдерах дочерних корутин
+            launch {
+                while (true) {
+                    delay(1000)
+                    Log.d("MyTest", "job1 isActive: $isActive")
+                }
+            }
+
+            delay(7000)
+            //ПОЧЕМУ CANCEL НЕ РАБОТАЕТ ПРИ ОТМЕНЕ РОДИТЕЛЬСКОЙ КОРУТИНЫ???
+            job1.cancel()
+
+            // exceptionHandler не перехватывает исключения в билдерах дочерних корутин
             val job2 = launch(/*exceptionHandler*/) {
                 val job2Child1 = launch(/*exceptionHandler*/) {
                     delay(3000)
@@ -73,7 +82,10 @@ class CancellationAndExceptionInStructuredConcurrency {
                 }
                 while (true) {
                     delay(1000)
-                    Log.d("MyTest", "job2Child1.isActive: ${job2Child1.isActive}. job2Child2.isActive: ${job2Child2.isActive}")
+                    Log.d(
+                        "MyTest",
+                        "job2Child1.isActive: ${job2Child1.isActive}. job2Child2.isActive: ${job2Child2.isActive}"
+                    )
                 }
             }
 
