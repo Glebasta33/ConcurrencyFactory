@@ -1,10 +1,12 @@
 package com.example.concurrencyfactory
 
 import android.util.Log
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class CancellationAndExceptionInStructuredConcurrency {
@@ -17,7 +19,7 @@ class CancellationAndExceptionInStructuredConcurrency {
      * Добавление CoroutineExceptionHandler в контекст родительского скоупа перехватывает исключения,
      * выброшенные дочерними корутинами.
      */
-    val rootScope = CoroutineScope(Dispatchers.Default /*+ exceptionHandler*/)
+    val rootScope = CoroutineScope(Dispatchers.Default + exceptionHandler)
 
     init {
         val rootJob = rootScope.launch(/*exceptionHandler*/) {
@@ -30,12 +32,29 @@ class CancellationAndExceptionInStructuredConcurrency {
                 }
 
                 val job1Child2 = launch {
-                    delay(3000)
+                    while (true) {
+                        Log.d("MyTest", "Hi from job1Child2. isActive: $isActive")
+                        /**
+                         *  CancellationException не отменяет работу родительских корутин. Его не перехватывет ExceptionHandler.
+                         *  Видимо CancellationException не передаётся вверх по иерархии Job.
+                         */
+                        if (!isActive) throw CancellationException("My CancellationException")
+                    }
                 }
-                while (true) {
-                    delay(1000)
-                    Log.d("MyTest", "job1Child1.isActive: ${job1Child1.isActive}. job1Child2.isActive: ${job1Child2.isActive}")
+
+                launch {
+                    while (true) {
+                        delay(1000)
+                        Log.d("MyTest", "job1Child1.isActive: ${job1Child1.isActive}. job1Child2.isActive: ${job1Child2.isActive}")
+                    }
                 }
+
+                delay(5000)
+                /**
+                 * Вызов Cancel лишь переводит статус корутины isActive в false, но не останавливает её выполнение.
+                 * Чтобы остановить корутину необходимо бросить CancellationException.
+                 */
+                job1Child2.cancel()
             }
 
             // exceptionHandlerт не перехватывает исключения в билдерах дочерних корутин
@@ -46,7 +65,7 @@ class CancellationAndExceptionInStructuredConcurrency {
                      * Выброшенное в любой корутине исключение отменяет работу всей иерархии корутин
                      * и приводит к крашу приложения, если исключение не обработать.
                      */
-                    throw RuntimeException("My exception from coroutine")
+//                    throw RuntimeException("My exception from coroutine")
                 }
 
                 val job2Child2 = launch {
